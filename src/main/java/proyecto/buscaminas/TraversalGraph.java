@@ -3,6 +3,8 @@ package proyecto.buscaminas;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
+import org.graphstream.ui.view.Viewer;
+
 
 /**
  * Clase TraversalGraph:
@@ -68,10 +70,16 @@ public class TraversalGraph {
      * Muestra el grafo en una ventana utilizando GraphStream y la UI Swing.
      */
     public void display() {
-        // Asegura que se use Swing para la visualización.
         System.setProperty("org.graphstream.ui", "swing");
-        graph.display();
+        Viewer viewer = graph.display();
+        viewer.enableAutoLayout();
+        // Establece que al cerrar la ventana se deseche solo esa ventana
+        viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.CLOSE_VIEWER);
     }
+    
+    
+    
+
     
     public Graph getGraph() {
         return graph;
