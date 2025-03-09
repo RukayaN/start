@@ -5,29 +5,29 @@ import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.view.Viewer;
 
-
 /**
- * Clase TraversalGraph:
- * Registra la secuencia en la que el jugador revela o marca casillas.
- * Cada nodo corresponde a una casilla (por su identificador, p.ej., "A1")
- * y se le asigna una clase CSS diferente según si la casilla fue marcada.
- * Se crean aristas conectando los nodos en el orden de los pasos.
+ * Registra la secuencia de casillas reveladas o marcadas durante el juego y permite visualizar
+ * este recorrido como un grafo utilizando GraphStream.
+ * Cada nodo representa una casilla (identificada por su id, ej. "A1") y se le asigna una clase CSS
+ * según si la casilla fue revelada o marcada. Se conectan los nodos en el orden en que se realizan los pasos.
  */
 public class TraversalGraph {
     private Graph graph;
     private int stepCounter;
-    private String lastCellId; // Almacena el identificador del último nodo agregado.
+    private String lastCellId; // Identificador del último nodo agregado.
 
+    /**
+     * Crea un nuevo grafo para registrar el recorrido.
+     * Configura el stylesheet para definir el estilo de nodos y aristas, y establece que los nodos se creen automáticamente.
+     */
     public TraversalGraph() {
         graph = new SingleGraph("Recorrido");
-        // Configuramos el stylesheet para usar colores que contrasten:
         graph.setAttribute("ui.stylesheet", 
             "node { fill-color: orange; size: 25px; text-size: 16; text-alignment: center; }" +
             "node.marked { fill-color: red; }" +
             "node.revealed { fill-color: green; }" +
             "edge { fill-color: gray; size: 2px; }"
         );
-        // Configuramos el grafo para auto creación de nodos y sin estricto modo (nos aseguramos que no haya duplicados)
         graph.setAutoCreate(true);
         graph.setStrict(false);
         stepCounter = 0;
@@ -35,27 +35,23 @@ public class TraversalGraph {
     }
 
     /**
-     * Agrega un paso al grafo de recorrido.
-     *
-     * @param cellId   Identificador de la casilla (por ejemplo, "A1").
-     * @param isMarked Indica si la celda fue marcada (true) o simplemente revelada (false).
+     * Agrega un paso al grafo, registrando la celda en la que se realizó una acción (revelado o marcado).
+     * Se actualiza el nodo correspondiente asignándole una clase CSS según la acción y se conecta con el nodo previo.
+     * @param cellId Identificador de la celda (ej. "A1").
+     * @param isMarked Indica si la acción fue marcar (true) o revelar (false).
      */
     public void addStep(String cellId, boolean isMarked) {
-        // Obtiene o crea el nodo correspondiente a la celda.
         Node node = graph.getNode(cellId);
         if (node == null) {
             node = graph.addNode(cellId);
         }
-        // Establece la clase CSS según el estado:
         if (isMarked) {
             node.setAttribute("ui.class", "marked");
         } else {
             node.setAttribute("ui.class", "revealed");
         }
-        // Actualiza la etiqueta para mostrar el identificador y el número de paso.
         node.setAttribute("ui.label", cellId + " (" + stepCounter + ")");
         
-        // Si existe una celda previa, crea una arista de conexión.
         if (lastCellId != null) {
             String edgeId = lastCellId + "-" + cellId + "-" + stepCounter;
             if (graph.getEdge(edgeId) == null) {
@@ -67,20 +63,20 @@ public class TraversalGraph {
     }
 
     /**
-     * Muestra el grafo en una ventana utilizando GraphStream y la UI Swing.
+     * Muestra el grafo en una ventana utilizando la UI Swing de GraphStream.
+     * Se habilita la auto-organización del grafo y se configura la política de cierre de la ventana.
      */
     public void display() {
         System.setProperty("org.graphstream.ui", "swing");
         Viewer viewer = graph.display();
         viewer.enableAutoLayout();
-        // Establece que al cerrar la ventana se deseche solo esa ventana
         viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.CLOSE_VIEWER);
     }
     
-    
-    
-
-    
+    /**
+     * Retorna el grafo subyacente.
+     * @return Objeto {@code Graph} utilizado para el recorrido.
+     */
     public Graph getGraph() {
         return graph;
     }

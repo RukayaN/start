@@ -26,9 +26,18 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+/**
+ * Clase principal que implementa la interfaz gráfica del juego Buscaminas utilizando Swing.
+ * Se encarga de:
+ * <ul>
+ *   <li>Inicializar y mostrar la ventana del juego.</li>
+ *   <li>Gestionar la interacción del usuario (clic izquierdo para revelar, clic derecho para marcar).</li>
+ *   <li>Crear, guardar y cargar juegos, y visualizar el recorrido del juego mediante un grafo.</li>
+ * </ul>
+ */
 public class Buscaminas extends JFrame {
     private Board board;               // Lógica del juego
-    private JButton[][] buttons;       // Matriz de botones (UI)
+    private JButton[][] buttons;       // Matriz de botones para la UI
     private JPanel boardPanel;
     private boolean gameInProgress = true;
 
@@ -39,22 +48,25 @@ public class Buscaminas extends JFrame {
     // Algoritmo de flood fill ("DFS" o "BFS")
     private String searchAlgorithm = "DFS";
 
-    // Objeto para registrar la secuencia de casillas reveladas/marcadas.
+    // Objeto para registrar el recorrido de casillas reveladas/marcadas.
     private TraversalGraph traversalGraph;
     
-    // Nuevo: contador de banderas colocadas
+    // Contador de banderas colocadas.
     private int flagsPlaced = 0;
     
-    // Panel de control para cambiar el algoritmo en tiempo real
+    // Panel de control para cambiar el algoritmo en tiempo real.
     private JPanel algorithmPanel;
     private JRadioButton dfsButton;
     private JRadioButton bfsButton;
 
+    /**
+     * Constructor que configura la ventana principal, la barra de menú, el panel de control y
+     * inicializa el juego.
+     */
     public Buscaminas() {
         setTitle("Buscaminas");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setJMenuBar(createMenuBar());
-        // Crea el panel de control de algoritmo y lo agrega a la ventana
         createAlgorithmPanel();
         initGame();
         setSize(600, 600);
@@ -63,7 +75,7 @@ public class Buscaminas extends JFrame {
     }
     
     /**
-     * Crea un panel de control que permite cambiar el algoritmo en tiempo real.
+     * Crea el panel de control para seleccionar el algoritmo de búsqueda (DFS o BFS) en tiempo real.
      */
     private void createAlgorithmPanel() {
         algorithmPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -77,7 +89,6 @@ public class Buscaminas extends JFrame {
         algorithmPanel.add(dfsButton);
         algorithmPanel.add(bfsButton);
         
-        // Agrega listeners para actualizar el algoritmo en Board y en la variable local
         dfsButton.addActionListener(e -> {
             searchAlgorithm = "DFS";
             if (board != null) {
@@ -91,15 +102,13 @@ public class Buscaminas extends JFrame {
             }
         });
         
-        // Agrega el panel al norte de la ventana
         add(algorithmPanel, BorderLayout.NORTH);
     }
 
     /**
-     * Inicializa/reinicia el juego:
-     * - Crea el Board (lógica) y la instancia de TraversalGraph.
-     * - Configura el callback para que cada celda revelada se registre en el grafo.
-     * - Construye la UI (panel y botones).
+     * Inicializa o reinicia el juego.
+     * Se crea el objeto {@code Board} y se configura el {@code TraversalGraph} para registrar las acciones.
+     * Además, se construye la UI con botones que representan las celdas del tablero.
      */
     private void initGame() {
         board = new Board(filas, columnas, minas, searchAlgorithm);
@@ -139,21 +148,27 @@ public class Buscaminas extends JFrame {
                 boardPanel.add(btn);
             }
         }
-        // Agrega el tablero en el centro
         getContentPane().add(boardPanel, BorderLayout.CENTER);
         revalidate();
         repaint();
     }
 
     /**
-     * Genera el identificador de la celda (por ejemplo, "A1" para (0,0)).
+     * Genera el identificador de la celda basado en su posición.
+     * Por ejemplo, la celda en (0,0) se identifica como "A1".
+     * @param r Fila de la celda.
+     * @param c Columna de la celda.
+     * @return El identificador de la celda.
      */
     private String getCellId(int r, int c) {
         return "" + (char) ('A' + c) + (r + 1);
     }
 
     /**
-     * Maneja la revelación de la celda, registrando el paso en el grafo.
+     * Maneja la acción de revelar una celda.
+     * Llama a {@code Board.revealCell()} y actualiza la UI.
+     * @param r Fila de la celda a revelar.
+     * @param c Columna de la celda a revelar.
      */
     private void handleReveal(int r, int c) {
         boolean safe = board.revealCell(r, c);
@@ -168,7 +183,11 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Alterna el marcado (bandera) de la celda y registra el paso en el grafo.
+     * Alterna el marcado (bandera) de una celda y registra la acción en el {@code TraversalGraph}.
+     * Verifica que el número de banderas no exceda la cantidad de minas.
+     * @param r Fila de la celda.
+     * @param c Columna de la celda.
+     * @param btn Botón asociado a la celda.
      */
     private void toggleMark(int r, int c, JButton btn) {
         if (!btn.isEnabled())
@@ -197,7 +216,8 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Actualiza los botones de la UI basándose en el estado actual del Board.
+     * Actualiza los botones de la UI basándose en el estado actual del {@code Board}.
+     * Desactiva botones de celdas reveladas y muestra el número de minas adyacentes o la mina.
      */
     private void updateButtons() {
         for (int i = 0; i < filas; i++) {
@@ -218,7 +238,8 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Verifica la victoria: si todas las celdas sin mina fueron reveladas, se declara victoria.
+     * Verifica si el jugador ha ganado el juego.
+     * Si todas las celdas sin mina han sido reveladas, se declara victoria.
      */
     private void checkVictory() {
         if (board.checkVictory()) {
@@ -229,7 +250,7 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Revela todas las casillas de la UI, mostrando los valores y las minas.
+     * Revela todas las casillas de la UI, mostrando minas o números de minas adyacentes.
      */
     private void revealAll() {
         for (int i = 0; i < filas; i++) {
@@ -250,7 +271,8 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Crea la barra de menú con las opciones: Nuevo Juego, Guardar Juego, Cargar Juego y Ver Recorrido.
+     * Crea la barra de menú con opciones: Nuevo Juego, Guardar Juego, Cargar Juego y Ver Recorrido.
+     * @return La barra de menú configurada.
      */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -281,7 +303,8 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Muestra un diálogo para configurar un nuevo juego: dimensiones, minas y algoritmo.
+     * Muestra un diálogo para configurar un nuevo juego.
+     * Permite al usuario ingresar dimensiones, número de minas y seleccionar el algoritmo de búsqueda.
      */
     private void showNewGameDialog() {
         JPanel panel = new JPanel(new GridLayout(0, 2));
@@ -297,8 +320,6 @@ public class Buscaminas extends JFrame {
         JTextField minesField = new JTextField(String.valueOf(minas));
         panel.add(minesField);
 
-        // Los radio buttons aquí son solo para preconfigurar un nuevo juego;
-        // el panel de control ya permite cambiarlos durante la partida.
         panel.add(new JLabel("Algoritmo de Búsqueda:"));
         JPanel algoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JRadioButton dfsNew = new JRadioButton("DFS");
@@ -337,7 +358,8 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Guarda el estado actual del juego en un archivo CSV utilizando JFileChooser.
+     * Guarda el estado actual del juego en un archivo CSV.
+     * Utiliza {@code JFileChooser} para que el usuario seleccione la ubicación y nombre del archivo.
      */
     private void saveGame() {
         JFileChooser chooser = new JFileChooser();
@@ -354,7 +376,8 @@ public class Buscaminas extends JFrame {
     }
 
     /**
-     * Carga el estado del juego desde un archivo CSV utilizando JFileChooser.
+     * Carga el estado del juego desde un archivo CSV.
+     * Utiliza {@code JFileChooser} para que el usuario seleccione el archivo a cargar.
      */
     private void loadGame() {
         JFileChooser chooser = new JFileChooser();
@@ -417,6 +440,11 @@ public class Buscaminas extends JFrame {
         }
     }
 
+    /**
+     * Método principal para iniciar la aplicación.
+     * Configura la propiedad para la UI de GraphStream y crea una instancia de Buscaminas.
+     * @param args Argumentos de línea de comandos.
+     */
     public static void main(String[] args) {
         System.setProperty("org.graphstream.ui", "swing");
         SwingUtilities.invokeLater(() -> new Buscaminas());
